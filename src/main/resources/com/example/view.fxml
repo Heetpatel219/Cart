@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.Controller" spacing="10">
+    <ComboBox fx:id="itemsComboBox" promptText="Select an item"/>
+    <Slider fx:id="quantitySlider" min="0" max="10" value="0"/>
+    <Label fx:id="unitLabel" text="Unit: N/A"/>
+    <Label fx:id="pricePerUnitLabel" text="Price per Unit: $0.00"/>
+    
+    <!-- Add and Remove buttons in an HBox -->
+    <HBox spacing="10">
+        <Button text="Add to Cart" onAction="#handleAddToCart"/>
+        <Button text="Remove from Cart" onAction="#handleRemoveFromCart"/>
+    </HBox>
+    
+    <TableView fx:id="cartTableView">
+        <columns>
+            <TableColumn fx:id="productColumn" text="Product"/>
+            <TableColumn fx:id="purchasedUnitColumn" text="Purchased Unit"/>
+            <TableColumn fx:id="totalPriceColumn" text="Total Price"/>
+        </columns>
+    </TableView>
+    <Label fx:id="totalPriceLabel" text="Total Price: $0.00"/>
+</VBox>

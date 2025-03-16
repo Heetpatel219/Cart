@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx/8" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.TableController">
+    <TableView fx:id="itemsTableView">
+        <columns>
+            <TableColumn fx:id="productColumn" text="Product"/>
+            <TableColumn fx:id="unitColumn" text="Unit"/>
+            <TableColumn fx:id="quantityColumn" text="Quantity"/>
+            <TableColumn fx:id="pricePerUnitColumn" text="Price per Unit"/>
+        </columns>
+    </TableView>
+</VBox>
