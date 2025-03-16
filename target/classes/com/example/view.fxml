@@ -29,4 +29,6 @@
         </columns>
     </TableView>
     <Label fx:id="totalPriceLabel" text="Total Price: $0.00"/>
+    <Button text="Save Cart" onAction="#handleSaveCart"/>
+    <Button text="Load Cart" onAction="#handleLoadCart" />
 </VBox>
