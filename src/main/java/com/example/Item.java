@@ -4,76 +4,112 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+
+import java.io.IOException;
 import java.io.Serializable;
 
 public class Item implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    // Use JavaFX properties for binding
-    private final StringProperty product = new SimpleStringProperty();
-    private final StringProperty unit = new SimpleStringProperty();
-    private final DoubleProperty pricePerUnit = new SimpleDoubleProperty();
-    private final DoubleProperty purchasedQuantity = new SimpleDoubleProperty();
+    // Underlying data fields (serializable)
+    private String product;
+    private String unit;
+    private double pricePerUnit;
+    private double purchasedQuantity;
+
+    // Transient fields for JavaFX properties (not serializable)
+    private transient StringProperty productProperty;
+    private transient StringProperty unitProperty;
+    private transient DoubleProperty pricePerUnitProperty;
+    private transient DoubleProperty purchasedQuantityProperty;
 
     public Item(String product, String unit, double pricePerUnit) {
-        this.product.set(product);
-        this.unit.set(unit);
-        this.pricePerUnit.set(pricePerUnit);
+        this.product = product;
+        this.unit = unit;
+        this.pricePerUnit = pricePerUnit;
+        this.purchasedQuantity = 0; // Default value
+        initProperties(); // Initialize JavaFX properties
     }
 
-    // Getters for properties
+    // Initialize JavaFX properties
+    private void initProperties() {
+        productProperty = new SimpleStringProperty(product);
+        unitProperty = new SimpleStringProperty(unit);
+        pricePerUnitProperty = new SimpleDoubleProperty(pricePerUnit);
+        purchasedQuantityProperty = new SimpleDoubleProperty(purchasedQuantity);
+    }
+
+    // Getters for JavaFX properties
     public StringProperty productProperty() {
-        return product;
+        return productProperty;
     }
 
     public StringProperty unitProperty() {
-        return unit;
+        return unitProperty;
     }
 
     public DoubleProperty pricePerUnitProperty() {
-        return pricePerUnit;
+        return pricePerUnitProperty;
     }
 
     public DoubleProperty purchasedQuantityProperty() {
-        return purchasedQuantity;
+        return purchasedQuantityProperty;
     }
 
     // Regular getters and setters
     public String getProduct() {
-        return product.get();
+        return product;
     }
 
     public void setProduct(String product) {
-        this.product.set(product);
+        this.product = product;
+        if (productProperty != null) {
+            productProperty.set(product);
+        }
     }
 
     public String getUnit() {
-        return unit.get();
+        return unit;
     }
 
     public void setUnit(String unit) {
-        this.unit.set(unit);
+        this.unit = unit;
+        if (unitProperty != null) {
+            unitProperty.set(unit);
+        }
     }
 
     public double getPricePerUnit() {
-        return pricePerUnit.get();
+        return pricePerUnit;
     }
 
     public void setPricePerUnit(double pricePerUnit) {
-        this.pricePerUnit.set(pricePerUnit);
+        this.pricePerUnit = pricePerUnit;
+        if (pricePerUnitProperty != null) {
+            pricePerUnitProperty.set(pricePerUnit);
+        }
     }
 
     public double getPurchasedQuantity() {
-        return purchasedQuantity.get();
+        return purchasedQuantity;
     }
 
     public void setPurchasedQuantity(double purchasedQuantity) {
-        this.purchasedQuantity.set(purchasedQuantity);
+        this.purchasedQuantity = purchasedQuantity;
+        if (purchasedQuantityProperty != null) {
+            purchasedQuantityProperty.set(purchasedQuantity);
+        }
     }
 
     // Calculate total price
     public double getTotalPrice() {
-        return pricePerUnit.get() * purchasedQuantity.get();
+        return pricePerUnit * purchasedQuantity;
+    }
+
+    // Custom deserialization logic
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject(); // Deserialize non-transient fields
+        initProperties(); // Reinitialize JavaFX properties
     }
 
     @Override

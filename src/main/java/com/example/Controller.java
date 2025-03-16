@@ -1,21 +1,31 @@
 package com.example;
 
-import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-
-import java.io.FileOutputStream;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.ObjectInputStream;
-import java.io.Serializable;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.NumberBinding;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.fxml.FXML;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextInputDialog;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ListView;
+import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 
 public class Controller {
     @FXML
@@ -54,6 +64,7 @@ public class Controller {
     );
 
     private ObservableList<Item> cartItems = FXCollections.observableArrayList();
+    private List<CartData> savedCarts = new ArrayList<>(); // List to store saved carts
 
     public void initialize() {
         itemsComboBox.setItems(items);
@@ -114,61 +125,87 @@ public class Controller {
 
     @FXML
     private void handleSaveCart() {
-        // Convert ObservableList to ArrayList for serialization
-        List<Item> cartItemsList = new ArrayList<>(cartTableView.getItems());
+        // Prompt the user to enter a name for the cart
+        TextInputDialog dialog = new TextInputDialog("Cart Name");
+        dialog.setTitle("Save Cart");
+        dialog.setHeaderText("Enter a name for the cart:");
+        dialog.setContentText("Name:");
 
-        // Calculate the total price of the cart
-        double totalPrice = cartItemsList.stream().mapToDouble(Item::getTotalPrice).sum();
+        dialog.showAndWait().ifPresent(name -> {
+            if (!name.trim().isEmpty()) {
+                // Save the cart with the given name
+                List<Item> cartItemsList = new ArrayList<>(cartTableView.getItems());
+                double totalPrice = cartItemsList.stream().mapToDouble(Item::getTotalPrice).sum();
+                CartData cart = new CartData(name, cartItemsList, totalPrice);
+                savedCarts.add(cart);
 
-        // Create a Cart object with the current items and total price
-        CartData cart = new CartData(cartItemsList, totalPrice);
+                // Clear the current cart
+                cartItems.clear();
 
-        // Save the cart to a file
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("saved_cart.ser"))) {
-            oos.writeObject(cart); // Serialize and save the Cart object
-            System.out.println("Cart saved successfully!");
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("Failed to save cart.");
-        }
+                // Save the list of saved carts to a file
+                try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("saved_carts.ser"))) {
+                    oos.writeObject(savedCarts);
+                    System.out.println("Cart saved successfully!");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    System.out.println("Failed to save cart.");
+                }
+            }
+        });
     }
 
     @FXML
     private void handleLoadCart() {
-        // Load the cart from the file
-        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("saved_cart.ser"))) {
-            CartData savedCart = (CartData) ois.readObject();
+        // Load the list of saved carts from the file
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream("saved_carts.ser"))) {
+            savedCarts = (List<CartData>) ois.readObject();
 
-            // Clear the current cart and add the saved items
-            cartItems.clear();
-            cartItems.addAll(savedCart.getItems());
-
-            // Update the total price label
-            totalPriceLabel.setText(String.format("Total Price: $%.2f", savedCart.getTotalPrice()));
-            System.out.println("Cart loaded successfully!");
+            // Show a pop-up window with the list of saved carts
+            showSavedCartsPopup();
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
-            System.out.println("Failed to load cart.");
+            System.out.println("Failed to load carts.");
         }
     }
 
-    // Inner class for serialization
-    public static class CartData implements Serializable {
-        private static final long serialVersionUID = 1L;
-        private List<Item> items;
-        private double totalPrice;
+    private void showSavedCartsPopup() {
+        // Create a dialog to display the saved carts
+        Dialog<Void> dialog = new Dialog<>();
+        dialog.setTitle("Saved Carts");
+        dialog.setHeaderText("Select a cart to load:");
 
-        public CartData(List<Item> items, double totalPrice) {
-            this.items = new ArrayList<>(items);
-            this.totalPrice = totalPrice;
+        // Create a ListView to display the saved carts
+        ListView<String> listView = new ListView<>();
+        for (CartData cart : savedCarts) {
+            listView.getItems().add(cart.toString());
         }
 
-        public List<Item> getItems() {
-            return items;
-        }
+        // Add the ListView to the dialog
+        dialog.getDialogPane().setContent(listView);
 
-        public double getTotalPrice() {
-            return totalPrice;
-        }
+        // Add a button to load the selected cart
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.OK);
+        dialog.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+
+        // Handle the OK button action
+        dialog.setResultConverter(buttonType -> {
+            if (buttonType == ButtonType.OK) {
+                String selectedCart = listView.getSelectionModel().getSelectedItem();
+                if (selectedCart != null) {
+                    // Find the selected cart and load its items
+                    for (CartData cart : savedCarts) {
+                        if (cart.toString().equals(selectedCart)) {
+                            cartItems.clear();
+                            cartItems.addAll(cart.getItems());
+                            break;
+                        }
+                    }
+                }
+            }
+            return null;
+        });
+
+        // Show the dialog
+        dialog.showAndWait();
     }
 }
